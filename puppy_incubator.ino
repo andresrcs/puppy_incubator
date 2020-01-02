@@ -9,10 +9,10 @@
 
 // TEMPERATURE PARAMETERS #########################################################
 // ################################################################################
-const float upper_level = 28.20;            // Turns off heater
-const float lower_level = 26.20;            // Turns on heater
-const float upper_limit = 29;               // Triggers alarm
-const float lower_limit = 25.5;             // Triggers alarm
+const float upper_level = 27.95;            // Turns off heater
+const float lower_level = 25.95;            // Turns on heater
+const float upper_limit = 28.50;            // Triggers hi temp notification
+const float lower_limit = 25.00;            // Triggers lo temp notification
 // ################################################################################
 // ################################################################################
 
