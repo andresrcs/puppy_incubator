@@ -5,16 +5,8 @@
 #include <DallasTemperature.h>  // Library for DS18B20 sensor
 #include <DHT.h>                // Library for the DHT11 sensor
 #include "DataToMaker.h"        // Functions for connecting to Maker/IFTTT
-#include "credentials.h"        // Personal credenials file
-
-// TEMPERATURE PARAMETERS #########################################################
-// ################################################################################
-const float upper_level = 27.95;            // Turns off heater
-const float lower_level = 25.95;            // Turns on heater
-const float upper_limit = 28.50;            // Triggers hi temp notification
-const float lower_limit = 25.00;            // Triggers lo temp notification
-// ################################################################################
-// ################################################################################
+#include "credentials.h"        // File with personal credenials (WLAN_SSID, WLAN_PASSWORD, WEBHOOKS_KEY)
+#include "parameters.h"         // File with temperature parameters (upper_level, lower_level, upper_limit, lower_limit)
 
 // Network Configurations
 IPAddress ip(192, 168, 0, 102);   // Lolin D1 mini Pro
@@ -151,15 +143,15 @@ void loop() {
   read_sensor();
 
   // CHECK TEMPERATURE AND SET RELAY ################################################
-  if (temp0 > 0 && temp0 < lower_level) {
+  if ((temp0 > 0 && temp0 < lower_level) || (temp1 > 0 && temp1 < lower_level)) {
     digitalWrite(relayPin, HIGH); // turn on relay with voltage HIGH
-  } else if (temp0 > upper_level) {
+  } else if (temp0 > upper_level || temp1 > upper_level) {
     digitalWrite(relayPin, LOW);  // turn off relay with voltage LOW
   }
   // ################################################################################
 
   // CHECK TEMPERATURE AND SEND ALARM ###############################################
-  if (temp0 >= upper_limit) {
+  if (temp0 >= upper_limit || temp1 >= upper_limit) {
     if (!triggered) {
       hi_temp_envent.setValue(1, String(temp0, 2));
       hi_temp_envent.setValue(2, String(temp1, 2));
@@ -169,7 +161,7 @@ void loop() {
       }
       triggered = true;
     }
-  } else if (temp0 <= lower_limit) {
+  } else if (temp0 <= lower_limit || temp1 <= lower_limit) {
     if (!triggered) {
       low_temp_envent.setValue(1, String(temp0, 2));
       low_temp_envent.setValue(2, String(temp1, 2));
@@ -199,6 +191,6 @@ void read_sensor() {
     temp1 = sensors.getTempCByIndex(1);
     temp2 = sensors.getTempCByIndex(2) - temp_offset;
     humidity = dht.readHumidity();
-    heat_index = dht.computeHeatIndex(temp0, humidity, false);
+    heat_index = dht.computeHeatIndex((temp0 + temp1) / 2, humidity, false);
   }
 }
