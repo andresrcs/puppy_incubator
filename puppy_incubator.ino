@@ -39,8 +39,9 @@ DHT dht(DHTPIN, DHTTYPE);
 const int relayPin = D1; //What pin the relay is connected to
 
 // Declare maker events
-DataToMaker hi_temp_envent(WEBHOOKS_KEY, "hi_temperature");
 DataToMaker low_temp_envent(WEBHOOKS_KEY, "low_temperature");
+DataToMaker hi_temp_envent(WEBHOOKS_KEY, "hi_temperature");
+
 
 // Global variables definition
 float temp0;                         //Define variables to store temp readings
@@ -178,7 +179,9 @@ void loop() {
       }
       triggered = true;
     }
-  } else triggered = false;
+  } else {
+    triggered = false;
+  }
   // #################################################################################
 }
 
