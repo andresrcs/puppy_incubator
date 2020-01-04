@@ -4,6 +4,8 @@
 #include <OneWire.h>            // Library for DS18B20 sensor
 #include <DallasTemperature.h>  // Library for DS18B20 sensor
 #include <DHT.h>                // Library for the DHT11 sensor
+#include <Adafruit_MQTT.h>      // MQTT client
+#include <Adafruit_MQTT_Client.h>
 #include "DataToMaker.h"        // Functions for connecting to Maker/IFTTT
 #include "credentials.h"        // File with personal credenials (WLAN_SSID, WLAN_PASSWORD, WEBHOOKS_KEY)
 #include "parameters.h"         // File with temperature parameters (upper_level, lower_level, upper_limit, lower_limit)
@@ -14,6 +16,11 @@ IPAddress gateway(192, 168, 0, 1);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress dns1(190, 113, 220, 18); // DNS requiered for WiFiClientSecure to work with HTTPS and static IP
 IPAddress dns2(190, 113, 220, 51);
+
+// MQTT client configuration
+WiFiClient esp_client;
+Adafruit_MQTT_Client mqtt(&esp_client, MQTT_SERVER, 1883, MQTT_USER, MQTT_PASSWORD);
+Adafruit_MQTT_Publish current_temp = Adafruit_MQTT_Publish(&mqtt, "current_temp"); // Define MQTT topic
 
 // Web Server Configuration
 ESP8266WebServer server(80);         // Define web-server on port 80
@@ -45,10 +52,15 @@ float heat_index;
 unsigned long previousMillis = 0;    //Temporal variable
 const long interval = 2000;          //Set minimal interval between readings
 bool triggered = false;              //Flag variable for sending notifications
+char* state;
+char* previous_state;
+
+void MQTT_connect();
 
 void setup() {
   Serial.begin(115200);
   delay(10);
+
   pinMode(LED_BUILTIN, OUTPUT);       //Initialize builtin LED (starts on)
 
   // Connect to WiFi network
@@ -142,15 +154,37 @@ void loop() {
 
   read_sensor();
 
-  // CHECK TEMPERATURE AND SET RELAY ################################################
-  if ((temp0 > 0 && temp0 < lower_level) || (temp1 > 0 && temp1 < lower_level)) {
+  // CHECK TEMPERATURE LEVELS AND SET RELAY #########################################
+  if ((temp0 > 0 && temp1 > 0) && (temp0 < lower_level || temp1 < lower_level)) {
     digitalWrite(relayPin, HIGH); // turn on relay with voltage HIGH
+    state = "low_temp";
   } else if (temp0 > upper_level || temp1 > upper_level) {
     digitalWrite(relayPin, LOW);  // turn off relay with voltage LOW
+    state = "hi_temp";
+  } else {
+    state = "normal";
+  }
+
+  // Send state via MQTT message
+  MQTT_connect();
+  if (state != previous_state) {
+    Serial.print(F("\nSending state: "));
+    Serial.print(state);
+    Serial.print("...");
+    if (! current_temp.publish(state)) {
+      Serial.println(F("Failed"));
+    } else {
+      Serial.println(F("OK!"));
+      previous_state = state;
+    }
+  }
+  // ping the server to keep the mqtt connection alive
+  if (! mqtt.ping()) {
+    mqtt.disconnect();
   }
   // ################################################################################
 
-  // CHECK TEMPERATURE AND SEND ALARM ###############################################
+  // CHECK TEMPERATURE LIMITS AND SEND NOTIFICATION #################################
   if (temp0 >= upper_limit || temp1 >= upper_limit) {
     if (!triggered) {
       hi_temp_envent.setValue(1, String(temp0, 2));
@@ -193,4 +227,30 @@ void read_sensor() {
     humidity = dht.readHumidity();
     heat_index = dht.computeHeatIndex((temp0 + temp1) / 2, humidity, false);
   }
+}
+
+// MQTT functiones
+void MQTT_connect() {
+  int8_t ret;
+
+  // Stop if already connected.
+  if (mqtt.connected()) {
+    return;
+  }
+
+  Serial.print("Connecting to MQTT... ");
+
+  uint8_t retries = 3;
+  while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
+    Serial.println(mqtt.connectErrorString(ret));
+    Serial.println("Retrying MQTT connection in 5 seconds...");
+    mqtt.disconnect();
+    delay(5000);  // wait 5 seconds
+    retries--;
+    if (retries == 0) {
+      // basically die and wait for WDT to reset me
+      while (1);
+    }
+  }
+  Serial.println("MQTT Connected!");
 }
