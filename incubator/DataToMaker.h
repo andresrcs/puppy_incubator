@@ -12,8 +12,7 @@ class DataToMaker
     void sendToMaker();
     void post();
 
-  protected: // it is protected because the subclass needs access
-    //to max distance!
+  protected:
 
   private:
     void compileData();

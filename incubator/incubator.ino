@@ -1,19 +1,40 @@
-#include <ESP8266WiFi.h>        // Library for WiFi
-#include <ESP8266WebServer.h>   // Library for the web server
-#include <ESP8266mDNS.h>        // Libraries for OTA updates
-#include <WiFiUdp.h>
-#include <ArduinoOTA.h>
-#include <ArduinoJson.h>        // Library for JSON objects
-#include <OneWire.h>            // Library for DS18B20 sensor
-#include <DallasTemperature.h>  // Library for DS18B20 sensor
-#include <DHT.h>                // Library for the DHT11 sensor
-#include <Adafruit_MQTT.h>      // MQTT client
-#include <Adafruit_MQTT_Client.h>
-#include "DataToMaker.h"        // Functions for connecting to Maker/IFTTT
-#include "credentials.h"        // File with personal credenials (WLAN_SSID, WLAN_PASSWORD, WEBHOOKS_KEY)
-#include "parameters.h"         // File with temperature parameters (upper_level, lower_level, upper_limit, lower_limit)
+#include <ESP8266WiFi.h>              // Library for WiFi
+#include <ESP8266WebServer.h>         // Library for the web server
+#include <ESP8266mDNS.h>              // Libraries for OTA updates
+#include <WiFiUdp.h>                  // Libraries for OTA updates
+#include <ArduinoOTA.h>               // Libraries for OTA updates
+#include <ArduinoJson.h>              // Library for JSON objects
+#include <OneWire.h>                  // Library for DS18B20 sensor
+#include <DallasTemperature.h>        // Library for DS18B20 sensor
+#include <DHT.h>                      // Library for the DHT11 sensor
+#include <Adafruit_MQTT.h>            // MQTT client
+#include <Adafruit_MQTT_Client.h>     // MQTT client
+#include "DataToMaker.h"              // Functions for connecting to Maker/IFTTT
+#include "credentials.h"
+    // Content - credentials.h  ##########################################################
+    // ###################################################################################
+       // WiFi Credentials 
+       // #define WLAN_SSID       "YOUR SSID"
+       // #define WLAN_PASSWORD   "YOUR PASSWORD"
+       // IFTT Webhooks Credentials
+       // #define WEBHOOKS_KEY    "YOUR_KEY"
+       // MQTT Credentials
+       // #define MQTT_SERVER     "YOUR MQTT BROKER IP"
+       // #define MQTT_USER       "MQTT USER"
+       // #define MQTT_PASSWORD   "MQTT PASSWORD"
+    // ###################################################################################
+    // ###################################################################################
+#include "parameters.h"
+    // Content - parameters.h   ##########################################################
+    // ###################################################################################
+       // #define upper_level 26.80f            // Turns off heater
+       // #define lower_level 25.20f            // Turns on heater
+       // #define upper_limit 29.00f            // Triggers hi temp notification
+       // #define lower_limit 24.50f            // Triggers lo temp notification
+    // ###################################################################################
+    // ###################################################################################
 
-// Network Configurations
+// Network Configuration
 IPAddress ip(192, 168, 0, 102);   // Lolin D1 mini Pro
 IPAddress gateway(192, 168, 0, 1);
 IPAddress subnet(255, 255, 255, 0);
@@ -43,7 +64,6 @@ const int relayPin = D1; //What pin the relay is connected to
 // Declare maker events
 DataToMaker low_temp_envent(WEBHOOKS_KEY, "low_temperature");
 DataToMaker hi_temp_envent(WEBHOOKS_KEY, "hi_temperature");
-
 
 // Global variables definition
 float temp0;                         //Define variables to store temp readings
@@ -115,9 +135,9 @@ void setup() {
   </head>\
   <body>\
     <h1>Sensor Data</h1>\
-    <p>Temperature 01: %s &#176;C</p>\
-    <p>Temperature 02: %s &#176;C</p>\
-    <p>Temperature 03: %s &#176;C</p>\
+    <p>Right Side Temperature: %s &#176;C</p>\
+    <p>Left Side Temperature: %s &#176;C</p>\
+    <p>Ambient Temperature: %s &#176;C</p>\
     <p>Humidity: %s &#37;</p>\
     <p>Apparent Temperature: %s &#176;C</p>\
   </body>\
@@ -177,6 +197,7 @@ void loop() {
 
   // Send state via MQTT message
   MQTT_connect();
+  
   if (state != previous_state) {
     Serial.print(F("\nSending state: "));
     Serial.print(state);
@@ -188,6 +209,7 @@ void loop() {
       previous_state = state;
     }
   }
+  
   // ping the server to keep the mqtt connection alive
   if (! mqtt.ping()) {
     mqtt.disconnect();
