@@ -1,8 +1,11 @@
-#include <ESP8266WiFi.h>        // Library for WiFi
-#include <Adafruit_NeoPixel.h>  // Library for the RGB LED
-#include <Adafruit_MQTT.h>       // MQTT client
+#include <ESP8266WiFi.h>           // Library for WiFi
+#include <ESP8266mDNS.h>           // Libraries for OTA updates
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
+#include <Adafruit_NeoPixel.h>     // Library for the RGB LED
+#include <Adafruit_MQTT.h>         // MQTT client
 #include <Adafruit_MQTT_Client.h>
-#include "credentials.h"        // File with personal credenials (WLAN_SSID, WLAN_PASSWORD, WEBHOOKS_KEY)
+#include "credentials.h"           // File with personal credenials (WLAN_SSID, WLAN_PASSWORD, WEBHOOKS_KEY)
 
 // Network Configurations
 IPAddress ip(192, 168, 0, 103);   // Wemos D1 mini
@@ -49,11 +52,15 @@ void setup() {
     Serial.print(".");
   }
 
+  // Start OTA service
+  ArduinoOTA.begin();
+
   Serial.println();
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 
+  // Suscribe to topic
   mqtt.subscribe(&current_temp);
 
   //Turn off the LED
@@ -63,9 +70,12 @@ void setup() {
 }
 
 void loop() {
+  // Start OTA handler
+  ArduinoOTA.handle();
 
   MQTT_connect();
 
+  // Manage suscriptions
   Adafruit_MQTT_Subscribe *subscription;
   // This pauses execution of everthing outside the while-loop
   while ((subscription = mqtt.readSubscription(1000))) {
@@ -78,7 +88,7 @@ void loop() {
         pixels.setPixelColor(0, pixels.Color(255, 0, 0)); // Red
         pixels.show();
       } else if (data == String("normal")) {
-        pixels.setPixelColor(0, pixels.Color(0, 255, 0)); // Green
+        pixels.setPixelColor(0, pixels.Color(0, 200, 0)); // Green
         pixels.show();
       } else if (data == String("low_temp")) {
         pixels.setPixelColor(0, pixels.Color(0, 0, 255)); // Blue

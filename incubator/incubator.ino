@@ -1,5 +1,8 @@
 #include <ESP8266WiFi.h>        // Library for WiFi
 #include <ESP8266WebServer.h>   // Library for the web server
+#include <ESP8266mDNS.h>        // Libraries for OTA updates
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
 #include <ArduinoJson.h>        // Library for JSON objects
 #include <OneWire.h>            // Library for DS18B20 sensor
 #include <DallasTemperature.h>  // Library for DS18B20 sensor
@@ -75,7 +78,10 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-
+  
+  // Start OTA service
+  ArduinoOTA.begin();
+  
   Serial.println();
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
@@ -150,6 +156,10 @@ void setup() {
 }
 
 void loop() {
+
+  // Start OTA handler
+  ArduinoOTA.handle();
+  
   server.handleClient();
 
   read_sensor();
