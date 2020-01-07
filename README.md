@@ -22,7 +22,9 @@ This incubator project currently has the following features:
 
 * It broadcasts the temperature status over `MQTT` messages.
 
-* The additional Wemos D1 mini board with a NeoPixel shield, receives the `MQTT` message and displays informative colors accordingly to the current temperature status (Hot, Normal, Cold).
+* An additional Wemos D1 mini board with a NeoPixel shield, receives the `MQTT` message and displays informative colors accordingly to the current temperature status (Hot, Normal, Cold).
+
+* The same board logs the temperature status (`MQTT` message) on an SD card and serves the `.csv` file through a web server.
 
 * It supports OTA updates on the same LAN.
 
@@ -34,6 +36,8 @@ This incubator project currently has the following features:
 * X1 - Lolin D1 mini Pro board
 * X1 - Wemos D1 mini
 * X1 - Wemos NeoPixel shield
+* X1 - Wemos SD shield
+* X1 - SD Card
 * X1 - Tripler Base from Wemos
 * X2 - DS18B20 probe temperature sensors
 * X1 - DS18B20 shield from Wemos

@@ -44,7 +44,7 @@ IPAddress dns2(190, 113, 220, 51);
 // MQTT client configuration
 WiFiClient esp_client;
 Adafruit_MQTT_Client mqtt(&esp_client, MQTT_SERVER, 1883, MQTT_USER, MQTT_PASSWORD);
-Adafruit_MQTT_Publish current_temp = Adafruit_MQTT_Publish(&mqtt, "current_temp"); // Define MQTT topic
+Adafruit_MQTT_Publish current_temp = Adafruit_MQTT_Publish(&mqtt, "current_temp", MQTT_QOS_1); // Define MQTT topic
 
 // Web Server Configuration
 ESP8266WebServer server(80);         // Define web-server on port 80
