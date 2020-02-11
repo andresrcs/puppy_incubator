@@ -217,7 +217,7 @@ void loop() {
   // ################################################################################
 
   // CHECK TEMPERATURE LIMITS AND SEND NOTIFICATION #################################
-  if (temp0 >= upper_limit || temp1 >= upper_limit) {
+  if ((temp0 + temp1) / 2 >= upper_limit) {
     if (!triggered) {
       hi_temp_envent.setValue(1, String(temp0, 2));
       hi_temp_envent.setValue(2, String(temp1, 2));
@@ -227,7 +227,7 @@ void loop() {
       }
       triggered = true;
     }
-  } else if (temp0 <= lower_limit || temp1 <= lower_limit) {
+  } else if ((temp0 + temp1) / 2 <= lower_limit) {
     if (!triggered) {
       low_temp_envent.setValue(1, String(temp0, 2));
       low_temp_envent.setValue(2, String(temp1, 2));
